@@ -8,7 +8,7 @@ ITMMainEngine::ITMMainEngine(const ITMLibSettings *settings, const ITMRGBDCalib 
 {
 	// create all the things required for marching cubes and mesh extraction
 	// - uses additional memory (lots!)
-	static const bool createMeshingEngine = true;
+	static const bool createMeshingEngine = settings->useMeshingEngine;
 
 	if ((imgSize_d.x == -1) || (imgSize_d.y == -1)) imgSize_d = imgSize_rgb;
 
@@ -16,6 +16,7 @@ ITMMainEngine::ITMMainEngine(const ITMLibSettings *settings, const ITMRGBDCalib 
 
 	this->scene = new ITMScene<ITMVoxel, ITMVoxelIndex>(&(settings->sceneParams), settings->useSwapping, 
 		settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU);
+	std::cout << "Made ITMScene" << std::endl;
 
 	meshingEngine = NULL;
 	switch (settings->deviceType)
@@ -29,8 +30,11 @@ ITMMainEngine::ITMMainEngine(const ITMLibSettings *settings, const ITMRGBDCalib 
 	case ITMLibSettings::DEVICE_CUDA:
 #ifndef COMPILE_WITHOUT_CUDA
 		lowLevelEngine = new ITMLowLevelEngine_CUDA();
+		std::cout << "Made LowLevelEngine" << std::endl;
 		viewBuilder = new ITMViewBuilder_CUDA(calib);
+		std::cout << "Made ViewBuilder" << std::endl;
 		visualisationEngine = new ITMVisualisationEngine_CUDA<ITMVoxel, ITMVoxelIndex>(scene);
+		std::cout << "Made VisualisationEngine" << std::endl;
 		if (createMeshingEngine) meshingEngine = new ITMMeshingEngine_CUDA<ITMVoxel, ITMVoxelIndex>();
 #endif
 		break;
@@ -46,6 +50,7 @@ ITMMainEngine::ITMMainEngine(const ITMLibSettings *settings, const ITMRGBDCalib 
 
 	mesh = NULL;
 	if (createMeshingEngine) mesh = new ITMMesh(settings->deviceType == ITMLibSettings::DEVICE_CUDA ? MEMORYDEVICE_CUDA : MEMORYDEVICE_CPU);
+	std::cout << "Made Meshing Engine" << std::endl;
 
 	Vector2i trackedImageSize = ITMTrackingController::GetTrackedImageSize(settings, imgSize_rgb, imgSize_d);
 
@@ -53,11 +58,13 @@ ITMMainEngine::ITMMainEngine(const ITMLibSettings *settings, const ITMRGBDCalib 
 	renderState_freeview = NULL; //will be created by the visualisation engine
 
 	denseMapper = new ITMDenseMapper<ITMVoxel, ITMVoxelIndex>(settings);
+	std::cout << "Made DenseMapper" << std::endl;
 	denseMapper->ResetScene(scene);
 
 	imuCalibrator = new ITMIMUCalibrator_iPad();
 	tracker = ITMTrackerFactory<ITMVoxel, ITMVoxelIndex>::Instance().Make(trackedImageSize, settings, lowLevelEngine, imuCalibrator, scene);
 	trackingController = new ITMTrackingController(tracker, visualisationEngine, lowLevelEngine, settings);
+	std::cout << "Made TrackingController" << std::endl;
 
 	trackingState = trackingController->BuildTrackingState(trackedImageSize);
 	tracker->UpdateInitialPose(trackingState);
@@ -66,6 +73,7 @@ ITMMainEngine::ITMMainEngine(const ITMLibSettings *settings, const ITMRGBDCalib 
 
 	fusionActive = true;
 	mainProcessingActive = true;
+	std::cout << "MainEngine Complete!" << std::endl;
 }
 
 ITMMainEngine::~ITMMainEngine()

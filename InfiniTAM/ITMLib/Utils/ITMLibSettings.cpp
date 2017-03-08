@@ -48,6 +48,9 @@ ITMLibSettings::ITMLibSettings(void)
 	/// model the sensor noise as  the weight for weighted ICP
 	modelSensorNoise = false;
 	if (trackerType == TRACKER_WICP) modelSensorNoise = true;
+
+	//Use Meshing Engine by default.
+	useMeshingEngine = true;
 	
 
 	// builds the tracking regime. level 0 is full resolution

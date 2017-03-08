@@ -125,6 +125,7 @@ try
 	}
 
 	ITMLibSettings *internalSettings = new ITMLibSettings();
+	//internalSettings->deviceType = ITMLibSettings::DEVICE_CPU;
 	ITMMainEngine *mainEngine = new ITMMainEngine(internalSettings, &imageSource->calib, imageSource->getRGBImageSize(), imageSource->getDepthImageSize());
 
 	UIEngine::Instance()->Initialise(argc, argv, imageSource, imuSource, mainEngine, "./Files/Out", internalSettings->deviceType);
