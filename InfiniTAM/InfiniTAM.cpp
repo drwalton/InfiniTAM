@@ -46,7 +46,9 @@ static void CreateDefaultImageSource(ImageSourceEngine* & imageSource, IMUSource
 	if (imageSource == NULL)
 	{
 		printf("trying OpenNI device: %s\n", (filename1==NULL)?"<OpenNI default device>":filename1);
-		imageSource = new OpenNIEngine(calibFile, filename1);
+
+		// Set useInternalCalibration to true if ITMVoxel::hasColorInformation is true
+		imageSource = new OpenNIEngine(calibFile, filename1, ITMVoxel::hasColorInformation);
 		if (imageSource->getDepthImageSize().x == 0)
 		{
 			delete imageSource;
@@ -145,6 +147,7 @@ try
 	}
 
 	ITMLibSettings *internalSettings = new ITMLibSettings();
+	//internalSettings->deviceType = ITMLibSettings::DEVICE_CPU;
 	ITMMainEngine *mainEngine = new ITMMainEngine(internalSettings, &imageSource->calib, imageSource->getRGBImageSize(), imageSource->getDepthImageSize());
 
 	UIEngine::Instance()->Initialise(argc, argv, imageSource, imuSource, mainEngine, "./Files/Out", internalSettings->deviceType);

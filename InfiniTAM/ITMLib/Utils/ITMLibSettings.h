@@ -31,6 +31,8 @@ namespace ITMLib
 
 			bool modelSensorNoise;
 
+			bool useMeshingEngine;
+
 			/// Tracker types
 			typedef enum {
 				//! Identifies a tracker based on colour image
