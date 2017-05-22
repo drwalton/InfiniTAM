@@ -4,8 +4,10 @@
 *.sdf
 *.suo
 *.swp
+*.VC.db
 x64/
 /InfiniTAM/build/
+build/
 /InfiniTAM/buildx/
 /InfiniTAM/install/
 /InfiniTAM/Files/Out/out.ppm

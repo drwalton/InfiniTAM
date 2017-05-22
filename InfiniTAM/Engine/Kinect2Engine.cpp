@@ -30,6 +30,7 @@ class Kinect2Engine::PrivateData {
 
 	IKinectSensor* kinectSensor;
 	IDepthFrameReader* depthFrameReader;
+	IColorFrameReader* colorFrameReader;
 };
 
 Kinect2Engine::Kinect2Engine(const char *calibFilename) : ImageSourceEngine(calibFilename)
@@ -39,7 +40,7 @@ Kinect2Engine::Kinect2Engine(const char *calibFilename) : ImageSourceEngine(cali
 	
 	data = new PrivateData();
 
-	colorAvailable = false;
+	colorAvailable = true;
 
 	HRESULT hr;
 
@@ -56,6 +57,7 @@ Kinect2Engine::Kinect2Engine(const char *calibFilename) : ImageSourceEngine(cali
 	if (data->kinectSensor)
 	{
 		IDepthFrameSource* pDepthFrameSource = NULL;
+		IColorFrameSource* pColorFrameSource = NULL;
 
 		hr = data->kinectSensor->Open();
 
@@ -65,7 +67,14 @@ Kinect2Engine::Kinect2Engine(const char *calibFilename) : ImageSourceEngine(cali
 		if (SUCCEEDED(hr))
 			hr = pDepthFrameSource->OpenReader(&data->depthFrameReader);
 
+		if (SUCCEEDED(hr))
+			hr = data->kinectSensor->get_ColorFrameSource(&pColorFrameSource);
+
+		if (SUCCEEDED(hr))
+			hr = pColorFrameSource->OpenReader(&data->colorFrameReader);
+
 		SafeRelease(pDepthFrameSource);
+		SafeRelease(pColorFrameSource);
 	}
 
 	if (!data->kinectSensor || FAILED(hr))
@@ -79,6 +88,7 @@ Kinect2Engine::Kinect2Engine(const char *calibFilename) : ImageSourceEngine(cali
 Kinect2Engine::~Kinect2Engine()
 {
 	SafeRelease(data->depthFrameReader);
+	SafeRelease(data->colorFrameReader);
 
 	if (data->kinectSensor) data->kinectSensor->Close();
 
@@ -87,38 +97,70 @@ Kinect2Engine::~Kinect2Engine()
 
 void Kinect2Engine::getImages(ITMUChar4Image *rgbImage, ITMShortImage *rawDepthImage)
 {
-	//Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CPU);
-	//if (colorAvailable)
-	//{
-	//}
+	Vector4u *rgb = rgbImage->GetData(MEMORYDEVICE_CPU);
+	BYTE* bigImg = new BYTE(4 * 1920 * 1080);
+	if (colorAvailable)
+	{
+		IColorFrame* pColorFrame = NULL;
+		UCHAR *pBuffer = NULL;
+		UINT nBufferSize = 0;
+
+		HRESULT hr = data->colorFrameReader->AcquireLatestFrame(&pColorFrame);
+		IFrameDescription *frameDescription;
+		pColorFrame->get_FrameDescription(&frameDescription);
+		int width, height;
+		frameDescription->get_Width(&width);
+		frameDescription->get_Height(&height);
+		std::cout << width << " " << height << std::endl;
+
+		if (SUCCEEDED(hr))
+		{
+			hr = pColorFrame->CopyConvertedFrameDataToArray(4*1920*1080, bigImg, ColorImageFormat_Rgba);
+			for (size_t r = 0; r < imageSize_rgb.y; ++r) {
+				for (size_t c = 0; c < imageSize_rgb.x; ++c) {
+					size_t bigR = floor(r * 2.25), bigC = c * 3;
+					size_t b = 4*(1920 * bigR + bigC);
+					Vector4u out = Vector4u(
+						bigImg[b], bigImg[b + 1], bigImg[b + 2], bigImg[b + 3]);
+					rgb[r*imageSize_rgb.x + c] = out;
+				}
+			}
+			if (!SUCCEEDED(hr)) {
+				throw 1;
+			}
+		}
+
+		SafeRelease(pColorFrame);
+	}
 	//else memset(rgb, 0, rgbImage->dataSize * sizeof(Vector4u));
 
-	//float *depth = out->depth->GetData(MEMORYDEVICE_CPU);
-	//if (depthAvailable)
-	//{
-	//	IDepthFrame* pDepthFrame = NULL;
-	//	UINT16 *pBuffer = NULL;
-	//	UINT nBufferSize = 0;
+	short *depth = rawDepthImage->GetData(MEMORYDEVICE_CPU);
+	if (depthAvailable)
+	{
+		IDepthFrame* pDepthFrame = NULL;
+		UINT16 *pBuffer = NULL;
+		UINT nBufferSize = 0;
 
-	//	HRESULT hr = data->depthFrameReader->AcquireLatestFrame(&pDepthFrame);
+		HRESULT hr = data->depthFrameReader->AcquireLatestFrame(&pDepthFrame);
 
-	//	if (SUCCEEDED(hr))
-	//	{
-	//		if (SUCCEEDED(hr))
-	//			hr = pDepthFrame->AccessUnderlyingBuffer(&nBufferSize, &pBuffer);
+		if (SUCCEEDED(hr))
+		{
+			if (SUCCEEDED(hr))
+				hr = pDepthFrame->AccessUnderlyingBuffer(&nBufferSize, &pBuffer);
 
-	//		if (SUCCEEDED(hr))
-	//		{
-	//			for (int i = 0; i < imageSize_d.x * imageSize_d.y; i++)
-	//			{
-	//				ushort depthPix = pBuffer[i];
-	//				depth[i] = depthPix == 0 ? -1.0f : (float)depthPix / 1000.0f;
-	//			}
-	//		}
-	//	}
+			if (SUCCEEDED(hr))
+			{
+				for (int i = 0; i < imageSize_d.x * imageSize_d.y; i++)
+				{
+					ushort depthPix = pBuffer[i];
+					depth[i] = depthPix;
+					//depth[i] = depthPix == 0 ? -1.0f : (float)depthPix / 1000.0f;
+				}
+			}
+		}
 
-	//	SafeRelease(pDepthFrame);
-	//}
+		SafeRelease(pDepthFrame);
+	}
 	//else memset(depth, 0, out->depth->dataSize * sizeof(short));
 
 	//out->inputImageType = ITMView::InfiniTAM_FLOAT_DEPTH_IMAGE;

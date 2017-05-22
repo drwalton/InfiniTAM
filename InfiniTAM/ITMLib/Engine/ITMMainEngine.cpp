@@ -115,11 +115,16 @@ void ITMMainEngine::SaveSceneToMesh(const char *objFileName)
 	mesh->WriteOBJ(objFileName);
 }
 
-void ITMMainEngine::ProcessFrame(ITMUChar4Image *rgbImage, ITMShortImage *rawDepthImage, ITMIMUMeasurement *imuMeasurement)
+void ITMMainEngine::ProcessFrame(
+	ITMUChar4Image *rgbImage, ITMShortImage *rawDepthImage, 
+	ITMIMUMeasurement *imuMeasurement)
 {
 	// prepare image and turn it into a depth image
-	if (imuMeasurement==NULL) viewBuilder->UpdateView(&view, rgbImage, rawDepthImage, settings->useBilateralFilter,settings->modelSensorNoise);
-	else viewBuilder->UpdateView(&view, rgbImage, rawDepthImage, settings->useBilateralFilter, imuMeasurement);
+	if (imuMeasurement==NULL) viewBuilder->UpdateView(
+		&view, rgbImage, rawDepthImage, 
+		settings->useBilateralFilter,settings->modelSensorNoise);
+	else viewBuilder->UpdateView(&view, rgbImage, rawDepthImage, 
+		settings->useBilateralFilter, imuMeasurement);
 
 	if (!mainProcessingActive) return;
 

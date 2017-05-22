@@ -33,7 +33,8 @@ inline void __cudaSafeCall( cudaError err, const char *file, const int line )
     if( cudaSuccess != err) {
 		printf("%s(%i) : cudaSafeCall() Runtime API error : %s.\n",
                 file, line, cudaGetErrorString(err) );
-        exit(-1);
+		throw (std::runtime_error(cudaGetErrorString(err)));
+        //exit(-1);
     }
 }
 

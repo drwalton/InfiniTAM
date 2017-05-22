@@ -73,6 +73,8 @@ OpenNIEngine::OpenNIEngine(const char *calibFilename, const char *deviceURI, con
 	this->calib.disparityCalib.params = Vector2f(1.0f/1000.0f, 0.0f);
 	if (useInternalCalibration) {
 		this->calib.trafo_rgb_to_depth = ITMExtrinsics();
+		this->calib.intrinsics_rgb.projectionParamsSimple.fx = 349.4621;
+		this->calib.intrinsics_rgb.projectionParamsSimple.fy = 350.2545;
 		this->calib.intrinsics_d = this->calib.intrinsics_rgb;
 	}
 
