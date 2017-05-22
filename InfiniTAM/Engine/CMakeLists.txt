@@ -24,6 +24,17 @@ IF(DEFINED libuvc_INCLUDE_DIRS)
   add_definitions(-DCOMPILE_WITH_LibUVC)
 ENDIF()
 
+IF(WITH_REALSENSE)
+  include_directories(${RealSense_INCLUDE_DIR})
+  add_definitions(-DCOMPILE_WITH_RealSense)
+  SET_PROPERTY(SOURCE RealSenseEngine.cpp PROPERTY COMPILE_FLAGS -std=c++11)
+ENDIF()
+
+IF(WITH_LIBROYALE)
+	include_directories(${LibRoyale_INCLUDE_DIR})
+	add_definitions(-DCOMPILE_WITH_LibRoyale)
+ENDIF()
+
 add_library(Engine
 ImageSourceEngine.cpp
 ImageSourceEngine.h
@@ -33,12 +44,16 @@ Kinect2Engine.cpp
 Kinect2Engine.h
 OpenNIEngine.cpp
 OpenNIEngine.h
+PicoFlexxEngine.cpp
+PicoFlexxEngine.h
 LibUVCEngine.cpp
 LibUVCEngine.h
 UIEngine.cpp
 UIEngine.h
 CLIEngine.cpp
 CLIEngine.h
+RealSenseEngine.cpp
+RealSenseEngine.h
 )
 
 target_link_libraries(Engine ${GLUT_LIBRARIES})
@@ -53,4 +68,9 @@ ENDIF(OPENNI_FOUND)
 IF(DEFINED libuvc_LIBRARIES)
   target_link_libraries(Engine ${libuvc_LIBRARIES})
 ENDIF()
-
+IF(WITH_REALSENSE)
+  TARGET_LINK_LIBRARIES(Engine ${RealSense_LIBRARY})
+ENDIF()
+IF(WITH_LIBROYALE)
+  target_link_libraries(Engine ${LibRoyale_LIBRARY})
+ENDIF(WITH_LIBROYALE)

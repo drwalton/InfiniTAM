@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 project(InfiniTAM)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
@@ -22,9 +22,17 @@ find_package(OpenNI QUIET)
 CANONIFY_BOOL(OPENNI_FOUND)
 message(STATUS "OpenNI found: " ${OPENNI_FOUND})
 
+find_package(LibRoyale QUIET)
+CANONIFY_BOOL(LibRoyale_FOUND)
+message(STATUS "LibRoyale found: " ${LibRoyale_FOUND})
+
 find_package(libuvc QUIET)
 CANONIFY_BOOL(libuvc_FOUND)
 message(STATUS "libuvc found: ${libuvc_FOUND}")
+
+find_package(RealSense QUIET)
+CANONIFY_BOOL(REALSENSE_FOUND)
+message(STATUS "librealsense found: ${REALSENSE_FOUND}")
 
 find_package(PNG QUIET)
 CANONIFY_BOOL(PNG_FOUND)
@@ -32,6 +40,9 @@ message(STATUS "libpng found: ${PNG_FOUND}")
 
 OPTION(WITH_CUDA "Build with CUDA support?" ${CUDA_FOUND})
 INCLUDE(${PROJECT_SOURCE_DIR}/cmake/UseOpenMP.cmake)
+
+OPTION(WITH_REALSENSE "Build with Intel RealSense support?" ${REALSENSE_FOUND})
+OPTION(WITH_LIBROYALE "Build with LibRoyale support?" ${LibRoyale_FOUND})
 
 IF(MSVC_IDE)
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -68,3 +79,4 @@ target_link_libraries(InfiniTAM_cli Utils)
 add_executable(InfiniTAM InfiniTAM.cpp)
 target_link_libraries(InfiniTAM Engine)
 target_link_libraries(InfiniTAM Utils)
+
